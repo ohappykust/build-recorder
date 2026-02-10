@@ -13,10 +13,6 @@ __top_builddir__build_recorder_SOURCES = \
 	tracer.c \
 	$(EMPTY)
 
-if STATIC_BUILD
-__top_builddir__build_recorder_LDFLAGS = @STATIC_LDFLAGS@
-endif
-
 noinst_HEADERS = hash.h pid_hash.h record.h types.h
 
 EXTRA_DIST = schema.c
