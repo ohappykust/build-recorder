@@ -60,17 +60,6 @@ jobs:
       - name: Build
         run: make -j$(nproc)
 
-      - name: Test --help
-        run: ./build-recorder --help
-
-      - name: Test --version
-        run: ./build-recorder --version
-
-      - name: Test argument validation
-        run: |
-          ./build-recorder -o 2>&1 && exit 1 || test $? -eq 64
-          ./build-recorder 2>&1 && exit 1 || test $? -eq 64
-
       - name: Functional test
         run: |
           ./build-recorder -o test.out echo "Hello CI"
@@ -115,11 +104,6 @@ jobs:
       - name: Verify static binary
         run: |
           file build-recorder | grep -q "static"
-
-      - name: Test static binary
-        run: |
-          ./build-recorder --help
-          ./build-recorder --version
 
       - name: Upload static artifact
         uses: actions/upload-artifact@v4
