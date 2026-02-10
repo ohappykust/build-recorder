@@ -503,11 +503,16 @@ handle_syscall_exit(pid_t pid, PROCESS_INFO *pi, int64_t rval)
 	    f = pinfo_find_finfo(pi, fd);
 
 	    if (f != NULL) {
+		if (f->hash != NULL) {
+		    free(f->hash);
+		}
 		f->hash = get_file_hash(f->abspath);
 		record_hash(f->outname, f->hash);
 
-		// Add it to global cache list
-		*next_finfo() = *f;
+		// Add it to global cache list only if we have valid data
+		if (f->hash != NULL && f->abspath != NULL) {
+		    *next_finfo() = *f;
+		}
 
 		// Remove the file from the process' list
 		for (int i = f - pi->finfo; i < pi->numfinfo; ++i) {
