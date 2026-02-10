@@ -120,6 +120,13 @@ get_file_hash(char *fname)
 	return NULL;
     }
 
+    // Skip hashing for virtual filesystems that can't be mmapped
+    if (strncmp(fname, "/sys/", 5) == 0 ||
+	strncmp(fname, "/proc/", 6) == 0 ||
+	strncmp(fname, "/dev/", 5) == 0) {
+	return NULL;
+    }
+
     if (stat(fname, &fstat)) {
 	error(0, errno, "getting info on `%s'", fname);
 	return NULL;

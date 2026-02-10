@@ -640,6 +640,10 @@ tracer_main(pid_t pid, PROCESS_INFO *pi, char *path, char **envp)
 		    if (ptrace
 			(PTRACE_GET_SYSCALL_INFO, pid, (void *) sizeof (info),
 			 &info) < 0) {
+			// Process may have exited - this is a race condition
+			if (errno == ESRCH) {
+			    break;  // Skip this event and wait for next
+			}
 			error(EXIT_FAILURE, errno,
 			      "tracee PTRACE_GET_SYSCALL_INFO failed");
 		    }
