@@ -115,6 +115,10 @@ get_file_hash(char *fname)
 {
     struct stat fstat;
 
+    if (fname == NULL) {
+	return NULL;
+    }
+
     if (stat(fname, &fstat)) {
 	error(0, errno, "getting info on `%s'", fname);
 	return NULL;
