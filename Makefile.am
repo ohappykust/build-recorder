@@ -7,3 +7,5 @@ ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = src examples benchmark
 
+EXTRA_DIST = doc/build-recorder-schema.ttl
+

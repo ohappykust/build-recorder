@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            libssl-dev \
+            xxd \
+            clang \
+            time
+
+      - name: Generate build system
+        run: autoreconf -i
+
+      - name: Configure
+        run: ./configure CC=${{ matrix.compiler }}
+
+      - name: Build
+        run: make
+
+      - name: Test --help
+        run: ./build-recorder --help
+
+      - name: Test --version
+        run: ./build-recorder --version
+
+      - name: Test argument validation
+        run: |
+          ./build-recorder -o 2>&1 && exit 1 || test $? -eq 64
+          ./build-recorder 2>&1 && exit 1 || test $? -eq 64
+
+      - name: Functional test
+        run: |
+          ./build-recorder -o test.out echo "Hello CI"
+          test -f test.out
+          grep -q "b:process" test.out
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-recorder-${{ matrix.compiler }}
+          path: build-recorder
+
+  build-static:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            libssl-dev \
+            xxd \
+            musl-tools
+
+      - name: Generate build system
+        run: autoreconf -i
+
+      - name: Configure static build
+        run: ./configure CC=musl-gcc --enable-static-build
+
+      - name: Build
+        run: make
+
+      - name: Verify static binary
+        run: |
+          file ./build-recorder
+          ldd ./build-recorder 2>&1 | grep -q "not a dynamic executable" || ldd ./build-recorder 2>&1 | grep -q "statically linked"
+
+      - name: Test static binary
+        run: |
+          ./build-recorder --help
+          ./build-recorder --version
+
+      - name: Upload static artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-recorder-static-linux-x86_64
+          path: build-recorder

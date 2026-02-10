@@ -1,0 +1,112 @@
+name: Build Packages (Test)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            debhelper \
+            devscripts \
+            autoconf \
+            automake \
+            libssl-dev \
+            xxd \
+            fakeroot \
+            time
+
+      - name: Build DEB package
+        run: |
+          dpkg-buildpackage -us -uc -b
+
+      - name: Move packages
+        run: |
+          mkdir -p dist
+          mv ../*.deb dist/
+
+      - name: Upload DEB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-package
+          path: dist/*.deb
+
+  build-rpm:
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          dnf install -y \
+            rpm-build \
+            rpmdevtools \
+            gcc \
+            make \
+            autoconf \
+            automake \
+            openssl-devel \
+            vim-common
+
+      - name: Setup RPM build tree
+        run: rpmdev-setuptree
+
+      - name: Create source tarball
+        run: |
+          autoreconf -i
+          ./configure
+          make dist
+          cp build-recorder-*.tar.gz ~/rpmbuild/SOURCES/
+
+      - name: Build RPM package
+        run: |
+          rpmbuild -ba build-recorder.spec
+
+      - name: Move packages
+        run: |
+          mkdir -p dist
+          mv ~/rpmbuild/RPMS/*/*.rpm dist/
+
+      - name: Upload RPM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-package
+          path: dist/*.rpm
+
+  release-packages:
+    needs: [build-deb, build-rpm]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Download DEB artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deb-package
+          path: packages
+
+      - name: Download RPM artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: rpm-package
+          path: packages
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: packages/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

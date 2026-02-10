@@ -1,0 +1,24 @@
+Source: build-recorder
+Section: devel
+Priority: optional
+Maintainer: Kirill Nikolaevskiy <me@happykust.dev>
+XSBC-Original-Maintainer: Fotios Valasiadis <fvalasiad@csd.auth.gr>
+Build-Depends: debhelper-compat (= 13),
+               autoconf,
+               automake,
+               libssl-dev,
+               xxd,
+               time
+Standards-Version: 4.6.0
+Homepage: https://github.com/ohappykust/build-recorder
+Rules-Requires-Root: no
+
+Package: build-recorder
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Record build process interactions to RDF Turtle format
+ build-recorder is a command line tool for Linux 5.3+ that records
+ information about build processes. It achieves this by running transparently
+ in the background while the build process is running, tracing it
+ and extracting all relevant information, which it then stores in the output
+ file in RDF Turtle format.

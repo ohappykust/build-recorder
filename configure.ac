@@ -29,6 +29,7 @@ dnl Checks for programs
 AC_CHECK_PROG(DOWNLOAD, curl, [curl -O])
 if test "x$DOWNLOAD" = x; then
     AC_CHECK_PROG(DOWNLOAD, wget, wget)
+    AC_SUBST([STATIC_LDFLAGS])
 fi
 AM_CONDITIONAL([HAVE_DOWNLOAD], [test -n "$DOWNLOAD"])
 AC_PATH_PROG(TIME, time)
@@ -166,6 +167,19 @@ AC_CHECK_FUNC([waitpid],, AC_MSG_ERROR([cannot find waitpid(2)]))
 
 dnl We need a C compiler
 AC_PROG_CC
+
+dnl Static build option
+AC_ARG_ENABLE([static-build],
+    [AS_HELP_STRING([--enable-static-build], [Build a fully static binary])],
+    [static_build=$enableval],
+    [static_build=no])
+
+if test "x$static_build" = "xyes"; then
+    AC_MSG_NOTICE([Static build enabled - will use -static at link time])
+    STATIC_LDFLAGS="-static"
+    AC_SUBST([STATIC_LDFLAGS])
+fi
+AM_CONDITIONAL([STATIC_BUILD], [test "x$static_build" = "xyes"])
 
 dnl Are we building from git checked-out sources, or a tarball?
 AM_CONDITIONAL([BUILD_FROM_GIT], [test -d "$srcdir/.git"])

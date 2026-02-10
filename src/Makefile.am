@@ -7,10 +7,15 @@ bin_PROGRAMS = $(top_builddir)/build-recorder
 __top_builddir__build_recorder_SOURCES = \
 	hash.c \
 	main.c \
+	pid_hash.c \
 	record.c \
 	schema.c \
 	tracer.c \
 	$(EMPTY)
+
+if STATIC_BUILD
+__top_builddir__build_recorder_LDFLAGS = @STATIC_LDFLAGS@
+endif
 
 dist_noinst_HEADERS = *.h
 
@@ -18,7 +23,8 @@ EXTRA_DIST = schema.c
 
 SCHEMA = ../doc/build-recorder-schema.ttl
 
-dist_data_DATA = $(SCHEMA)
+pkgdatadir = $(datadir)/build-recorder
+pkgdata_DATA = $(SCHEMA)
 
 if HAVE_XXD
 schema.c: $(SCHEMA)
