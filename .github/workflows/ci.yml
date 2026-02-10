@@ -114,8 +114,7 @@ jobs:
 
       - name: Verify static binary
         run: |
-          file build-recorder
-          ldd build-recorder 2>&1 | grep -q "not a dynamic executable" || ldd build-recorder 2>&1 | grep -q "statically linked"
+          file build-recorder | grep -q "static"
 
       - name: Test static binary
         run: |
