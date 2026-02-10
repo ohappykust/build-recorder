@@ -37,11 +37,11 @@ jobs:
 
       - name: Verify static binary
         run: |
-          file src/build-recorder
-          ldd src/build-recorder 2>&1 | grep -q "not a dynamic executable" || ldd src/build-recorder 2>&1 | grep -q "statically linked"
+          file build-recorder
+          ldd build-recorder 2>&1 | grep -q "not a dynamic executable" || ldd build-recorder 2>&1 | grep -q "statically linked"
 
       - name: Rename binary
-        run: mv src/build-recorder build-recorder-linux-x86_64-static
+        run: mv build-recorder build-recorder-linux-x86_64-static
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
