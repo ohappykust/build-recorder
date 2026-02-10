@@ -66,6 +66,7 @@ hash_file_contents(char *name, size_t sz)
 
     if (buf == MAP_FAILED) {
 	error(0, errno, "mmaping `%s'", name);
+	close(fd);
 	return NULL;
     }
     int ret = madvise(buf, sz, MADV_SEQUENTIAL);

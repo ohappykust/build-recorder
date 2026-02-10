@@ -498,9 +498,18 @@ handle_syscall_exit(pid_t pid, PROCESS_INFO *pi, int64_t rval)
 		// Only record and cache if we successfully got the hash
 		if (f->hash != NULL && f->abspath != NULL) {
 		    record_hash(f->outname, f->hash);
-		    // Add it to global cache list
-		    *next_finfo() = *f;
+		    // Add it to global cache list (deep copy to avoid double-free)
+		    FILE_INFO *global_f = next_finfo();
+		    global_f->path = f->path ? strdup(f->path) : NULL;
+		    global_f->abspath = f->abspath ? strdup(f->abspath) : NULL;
+		    global_f->hash = f->hash ? strdup(f->hash) : NULL;
+		    strcpy(global_f->outname, f->outname);
 		}
+
+		// Free the strings before removing from process list
+		free(f->path);
+		free(f->abspath);
+		free(f->hash);
 
 		// Remove the file from the process' list
 		for (int i = f - pi->finfo; i < pi->numfinfo; ++i) {
