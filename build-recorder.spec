@@ -41,5 +41,7 @@ autoreconf -i
 %{_datadir}/build-recorder/build-recorder-schema.ttl
 
 %changelog
-* Mon Feb 10 2025 Build Recorder Team <team@build-recorder.org> - 1.0-1
+* Mon Feb 10 2026 Kirill Nikolaevskiy <me@happykust.dev> - 1.0-1
 - Initial RPM release
+- Add CI/CD support
+- Add static build support

@@ -9,7 +9,7 @@ jobs:
   build-static:
     runs-on: ubuntu-latest
     container: alpine:latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,7 +33,7 @@ jobs:
         run: ./configure LDFLAGS="-static"
 
       - name: Build
-        run: make
+        run: make -j$(nproc)
 
       - name: Verify static binary
         run: |
@@ -51,10 +51,21 @@ jobs:
 
   build-tarball:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives
+            /var/lib/apt/lists
+          key: ${{ runner.os }}-apt-tarball-${{ hashFiles('debian/control') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-tarball-
+            ${{ runner.os }}-apt-
 
       - name: Install dependencies
         run: |
@@ -65,6 +76,18 @@ jobs:
             libssl-dev \
             xxd \
             time
+
+      - name: Cache autotools
+        uses: actions/cache@v4
+        with:
+          path: |
+            autom4te.cache
+            aclocal.m4
+            configure
+            config.h.in
+          key: ${{ runner.os }}-autotools-${{ hashFiles('configure.ac', 'Makefile.am', 'src/Makefile.am') }}
+          restore-keys: |
+            ${{ runner.os }}-autotools-
 
       - name: Generate build system
         run: autoreconf -i
@@ -83,10 +106,21 @@ jobs:
 
   build-deb:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives
+            /var/lib/apt/lists
+          key: ${{ runner.os }}-apt-deb-${{ hashFiles('debian/control') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-deb-
+            ${{ runner.os }}-apt-
 
       - name: Install build dependencies
         run: |
@@ -116,7 +150,7 @@ jobs:
   build-rpm:
     runs-on: ubuntu-latest
     container: fedora:latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -157,7 +191,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       changelog: ${{ steps.changelog.outputs.changelog }}
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -204,7 +238,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
       - name: Download static binary
         uses: actions/download-artifact@v4
@@ -234,7 +268,7 @@ jobs:
         run: ls -la artifacts/
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*
           body: ${{ needs.generate-changelog.outputs.changelog }}

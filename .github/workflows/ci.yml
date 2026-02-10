@@ -9,14 +9,24 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         compiler: [gcc, clang]
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives
+            /var/lib/apt/lists
+          key: ${{ runner.os }}-apt-${{ hashFiles('debian/control') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
 
       - name: Install dependencies
         run: |
@@ -29,6 +39,18 @@ jobs:
             clang \
             time
 
+      - name: Cache autotools
+        uses: actions/cache@v4
+        with:
+          path: |
+            autom4te.cache
+            aclocal.m4
+            configure
+            config.h.in
+          key: ${{ runner.os }}-autotools-${{ hashFiles('configure.ac', 'Makefile.am', 'src/Makefile.am') }}
+          restore-keys: |
+            ${{ runner.os }}-autotools-
+
       - name: Generate build system
         run: autoreconf -i
 
@@ -36,7 +58,7 @@ jobs:
         run: ./configure CC=${{ matrix.compiler }}
 
       - name: Build
-        run: make
+        run: make -j$(nproc)
 
       - name: Test --help
         run: ./build-recorder --help
@@ -64,7 +86,7 @@ jobs:
   build-static:
     runs-on: ubuntu-latest
     container: alpine:latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -88,7 +110,7 @@ jobs:
         run: ./configure LDFLAGS="-static"
 
       - name: Build
-        run: make
+        run: make -j$(nproc)
 
       - name: Verify static binary
         run: |
