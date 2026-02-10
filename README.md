@@ -21,8 +21,45 @@ file in RDF Turtle format.
 A complete schema for the generated RDF can be found in docs/output.md.
 
 **build-recorder** works regardless of the programming language, build system
-or configuration used. In fact there is no limitation as to what the supplied 
+or configuration used. In fact there is no limitation as to what the supplied
 command should be. If it runs, **build-recorder** can trace it.
+
+## Installation
+
+### Pre-built packages (recommended)
+
+Download the latest release from the [releases page](https://github.com/ohappykust/build-recorder/releases/latest).
+
+#### Debian/Ubuntu (DEB)
+```bash
+# Download the .deb package, then install with automatic dependency resolution:
+sudo apt install ./build-recorder_1.0-1_amd64.deb
+```
+
+#### Fedora/RHEL/Rocky Linux (RPM)
+```bash
+# Download the .rpm package, then install with automatic dependency resolution:
+sudo dnf install build-recorder-1.0-1.fc43.x86_64.rpm
+```
+
+**Note:** Using `apt install` or `dnf install` (not `dpkg -i` or `rpm -i`) ensures that all required dependencies (OpenSSL, glibc) are automatically installed.
+
+### Static binary (no dependencies)
+
+For systems where you cannot install packages or need a standalone binary:
+
+```bash
+# Download the static binary
+wget https://github.com/ohappykust/build-recorder/releases/latest/download/build-recorder-linux-x86_64-static
+
+# Make it executable
+chmod +x build-recorder-linux-x86_64-static
+
+# Run it
+./build-recorder-linux-x86_64-static --help
+```
+
+The static binary includes all dependencies and works on any Linux 5.3+ system without requiring additional libraries.
 
 ## Build
 To build it you are going to need the following tools:
