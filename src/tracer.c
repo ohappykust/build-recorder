@@ -271,8 +271,11 @@ handle_open(pid_t pid, PROCESS_INFO *pi, int fd, int dirfd, void *path,
     path = get_str_from_process(pid, path);
     char *abspath = absolutepath(pid, dirfd, path);
 
-    if (abspath == NULL)
-	error(EXIT_FAILURE, errno, "on handle_open absolutepath");
+    // If file doesn't exist or can't be accessed, skip tracking it
+    if (abspath == NULL) {
+	free(path);
+	return;
+    }
 
     FILE_INFO *f = NULL;
 
