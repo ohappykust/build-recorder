@@ -1,5 +1,5 @@
 Name:           build-recorder
-Version:        1.0.2
+Version:        1.0.3
 Release:        1%{?dist}
 Summary:        Record build process interactions to RDF Turtle format
 
@@ -12,7 +12,6 @@ BuildRequires:  make
 BuildRequires:  autoconf
 BuildRequires:  automake
 BuildRequires:  openssl-devel
-BuildRequires:  vim-common
 
 Requires:       openssl-libs
 
@@ -41,7 +40,14 @@ autoreconf -i
 %{_datadir}/build-recorder/build-recorder-schema.ttl
 
 %changelog
-* Mon Feb 10 2026 Kirill Nikolaevskiy <me@happykust.dev> - 1.0.2-1
+* Mon Feb 10 2026 Kirill Nikolaevskiy <me@happykust.dev> - 1.0.3-1
+- Suppress error messages for virtual filesystem access (/sys, /proc, /dev)
+- Fix segmentation fault when renaming nonexistent files
+- Handle inaccessible files gracefully in file open operations
+- Handle PTRACE race conditions when processes exit quickly
+- All fixes make build-recorder resilient to package managers like pnpm
+
+* Sat Feb 10 2026 Kirill Nikolaevskiy <me@happykust.dev> - 1.0.2-1
 - Fix memory corruption bugs when accessing inaccessible /sys files
 - Fix file descriptor leak in hash.c when mmap fails
 - Fix NULL pointer dereference in record.c
