@@ -1,5 +1,5 @@
 Name:           build-recorder
-Version:        1.0
+Version:        1.0.2
 Release:        1%{?dist}
 Summary:        Record build process interactions to RDF Turtle format
 
@@ -41,6 +41,12 @@ autoreconf -i
 %{_datadir}/build-recorder/build-recorder-schema.ttl
 
 %changelog
+* Mon Feb 10 2026 Kirill Nikolaevskiy <me@happykust.dev> - 1.0.2-1
+- Fix memory corruption bugs when accessing inaccessible /sys files
+- Fix file descriptor leak in hash.c when mmap fails
+- Fix NULL pointer dereference in record.c
+- Fix double-free in tracer.c with deep copy and proper cleanup
+
 * Mon Feb 10 2026 Kirill Nikolaevskiy <me@happykust.dev> - 1.0-1
 - Initial RPM release
 - Add CI/CD support

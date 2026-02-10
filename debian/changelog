@@ -1,3 +1,12 @@
+build-recorder (1.0.2-1) unstable; urgency=medium
+
+  * Fix memory corruption bugs when accessing inaccessible /sys files
+  * Fix file descriptor leak in hash.c when mmap fails
+  * Fix NULL pointer dereference in record.c
+  * Fix double-free in tracer.c with deep copy and proper cleanup
+
+ -- Kirill Nikolaevskiy <me@happykust.dev>  Mon, 10 Feb 2026 16:55:00 +0300
+
 build-recorder (1.0-1) unstable; urgency=medium
 
   * Initial release.
