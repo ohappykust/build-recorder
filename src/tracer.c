@@ -8,7 +8,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 #include	"config.h"
 
 #include	<errno.h>
-#include "compat.h"
+#include	<error.h>
 #include	<stdlib.h>
 #include	<stdio.h>
 #include	<stddef.h>
@@ -22,12 +22,11 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 #include	<sys/signal.h>
 #include	<sys/syscall.h>
 #include	<sys/wait.h>
-
+#include	<linux/limits.h>
 
 #include	"types.h"
 #include	"hash.h"
 #include	"record.h"
-#include	"pid_hash.h"
 
 /*
  * variables for the list of processes,
@@ -36,20 +35,17 @@ SPDX-License-Identifier: LGPL-2.1-or-later
  * same size and array size.
  */
 
+int *pids;
+PROCESS_INFO *pinfo;
+int numpinfo;
+int pinfo_size;
+
+FILE_INFO *finfo;
+int numfinfo;
+int finfo_size;
+
 #define	DEFAULT_PINFO_SIZE	32
 #define	DEFAULT_FINFO_SIZE	32
-
-typedef struct {
-    PROCESS_INFO *pinfo;
-    int numpinfo;
-    int pinfo_size;
-    FILE_INFO *finfo;
-    int numfinfo;
-    int finfo_size;
-    PID_HASH_TABLE pid_ht;
-} TRACER_CTX;
-
-static TRACER_CTX ctx;
 
 /*
  * memory allocators for pinfo
@@ -58,47 +54,45 @@ static TRACER_CTX ctx;
 void
 init(void)
 {
-    ctx.pinfo_size = DEFAULT_PINFO_SIZE;
-    ctx.pinfo = calloc(ctx.pinfo_size, sizeof (PROCESS_INFO));
-    if (ctx.pinfo == NULL)
-	error(EXIT_FAILURE, errno, "allocating process info array");
-    ctx.numpinfo = -1;
+    pinfo_size = DEFAULT_PINFO_SIZE;
+    pinfo = calloc(pinfo_size, sizeof (PROCESS_INFO));
+    pids = malloc(pinfo_size * sizeof (int));
+    numpinfo = -1;
 
-    ctx.finfo_size = DEFAULT_FINFO_SIZE;
-    ctx.finfo = calloc(ctx.finfo_size, sizeof (FILE_INFO));
-    if (ctx.finfo == NULL)
-	error(EXIT_FAILURE, errno, "allocating file info array");
-    ctx.numfinfo = -1;
-
-    pid_hash_init(&ctx.pid_ht);
+    finfo_size = DEFAULT_FINFO_SIZE;
+    finfo = calloc(finfo_size, sizeof (FILE_INFO));
+    numfinfo = -1;
 }
 
 PROCESS_INFO *
 next_pinfo(pid_t pid)
 {
-    if (ctx.numpinfo == ctx.pinfo_size - 1) {
-	ctx.pinfo_size *= 2;
-	ctx.pinfo = reallocarray(ctx.pinfo, ctx.pinfo_size, sizeof (PROCESS_INFO));
-	if (ctx.pinfo == NULL)
+    if (numpinfo == pinfo_size - 1) {
+	pinfo_size *= 2;
+	pinfo = reallocarray(pinfo, pinfo_size, sizeof (PROCESS_INFO));
+	if (pinfo == NULL)
 	    error(EXIT_FAILURE, errno, "reallocating process info array");
+
+	pids = reallocarray(pids, pinfo_size, sizeof (int));
+	if (pids == NULL)
+	    error(EXIT_FAILURE, errno, "reallocating pids array");
     }
 
-    ++ctx.numpinfo;
-    pid_hash_insert(&ctx.pid_ht, pid, ctx.numpinfo);
-    return ctx.pinfo + ctx.numpinfo;
+    pids[numpinfo + 1] = pid;
+    return pinfo + (++numpinfo);
 }
 
 FILE_INFO *
 next_finfo(void)
 {
-    if (ctx.numfinfo == ctx.finfo_size - 1) {
-	ctx.finfo_size *= 2;
-	ctx.finfo = reallocarray(ctx.finfo, ctx.finfo_size, sizeof (FILE_INFO));
-	if (ctx.finfo == NULL)
+    if (numfinfo == finfo_size - 1) {
+	finfo_size *= 2;
+	finfo = reallocarray(finfo, finfo_size, sizeof (FILE_INFO));
+	if (finfo == NULL)
 	    error(EXIT_FAILURE, errno, "reallocating file info array");
     }
 
-    return ctx.finfo + (++ctx.numfinfo);
+    return finfo + (++numfinfo);
 }
 
 void
@@ -128,25 +122,29 @@ finfo_new(FILE_INFO *self, char *path, char *abspath, char *hash)
 PROCESS_INFO *
 find_pinfo(pid_t pid)
 {
-    int idx = pid_hash_find(&ctx.pid_ht, pid);
+    int i = numpinfo;
 
-    if (idx < 0) {
+    while (i >= 0 && pids[i] != pid) {
+	--i;
+    }
+
+    if (i < 0) {
 	return NULL;
     }
 
-    return ctx.pinfo + idx;
+    return pinfo + i;
 }
 
 FILE_INFO *
 find_finfo(char *abspath, char *hash)
 {
-    int i = ctx.numfinfo;
+    int i = numfinfo;
 
     while (i >= 0) {
-	if (!strcmp(abspath, ctx.finfo[i].abspath)
-	    && ((hash == NULL && ctx.finfo[i].hash == NULL)
-		|| (hash != NULL && ctx.finfo[i].hash != NULL
-		    && !strcmp(hash, ctx.finfo[i].hash)))) {
+	if (!strcmp(abspath, finfo[i].abspath)
+	    && ((hash == NULL && finfo[i].hash == NULL)
+		|| (hash != NULL && finfo[i].hash != NULL
+		    && !strcmp(hash, finfo[i].hash)))) {
 
 	    break;
 	}
@@ -158,7 +156,7 @@ find_finfo(char *abspath, char *hash)
 	return NULL;
     }
 
-    return ctx.finfo + i;
+    return finfo + i;
 }
 
 FILE_INFO *
@@ -242,18 +240,8 @@ char *
 find_in_path(char *path)
 {
     static char buf[PATH_MAX];
-    char *ret = NULL;
-    char *env_path = getenv("PATH");
-
-    if (env_path == NULL) {
-	return NULL;
-    }
-
-    char *PATH = strdup(env_path);
-    if (PATH == NULL) {
-	error(EXIT_FAILURE, errno, "on find_in_path strdup");
-    }
-
+    char *ret;
+    char *PATH = strdup(getenv("PATH"));
     char *it = PATH;
     char *last;
 
@@ -263,10 +251,9 @@ find_in_path(char *path)
 	    *last = '\0';
 	}
 
-	snprintf(buf, PATH_MAX, "%s/%s", it, path);
+	sprintf(buf, "%s/%s", it, path);
 	ret = realpath(buf, NULL);
 	if (!ret && (errno != 0 && errno != ENOENT)) {
-	    free(PATH);
 	    error(EXIT_FAILURE, errno, "on find_in_path realpath");
 	}
 	it = last + 1;
@@ -369,7 +356,7 @@ handle_rename_entry(pid_t pid, PROCESS_INFO *pi, int olddirfd, char *oldpath)
 	free(hash);
     }
 
-    pi->entry_info = (void *) (f - ctx.finfo);
+    pi->entry_info = (void *) (f - finfo);
     if (pi->entry_info == NULL)
 	error(EXIT_FAILURE, errno, "on handle_rename_entry absolutepath");
 }
@@ -377,7 +364,7 @@ handle_rename_entry(pid_t pid, PROCESS_INFO *pi, int olddirfd, char *oldpath)
 static void
 handle_rename_exit(pid_t pid, PROCESS_INFO *pi, int newdirfd, char *newpath)
 {
-    FILE_INFO *from = ctx.finfo + (ptrdiff_t) pi->entry_info;
+    FILE_INFO *from = finfo + (ptrdiff_t) pi->entry_info;
 
     char *abspath = absolutepath(pid, newdirfd, newpath);
 
@@ -698,8 +685,13 @@ tracer_main(pid_t pid, PROCESS_INFO *pi, char *path, char **envp)
 	    free(process_state->finfo);
 	    free(process_state->fds);
 
-	    pid_hash_remove(&ctx.pid_ht, pid);
-	    --ctx.numpinfo;
+	    for (int i = process_state - pinfo; i < numpinfo; ++i) {
+		pinfo[i] = pinfo[i + 1];
+	    }
+	    for (int i = process_state - pinfo; i < numpinfo; ++i) {
+		pids[i] = pids[i + 1];
+	    }
+	    --numpinfo;
 	}
     }
 }

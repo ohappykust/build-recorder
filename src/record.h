@@ -2,7 +2,6 @@
 
 /* record.c */
 void record_start(char *fname);
-void record_end(void);
 void record_process_start(pid_t pid, char *poutname);
 void record_process_end(char *poutname);
 void record_process_env(char *poutname, char **envp);
