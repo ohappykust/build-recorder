@@ -8,6 +8,7 @@ on:
 jobs:
   build-static:
     runs-on: ubuntu-latest
+    container: alpine:latest
     
     steps:
       - name: Checkout repository
@@ -15,26 +16,31 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          apk add --no-cache \
+            build-base \
             autoconf \
             automake \
-            libssl-dev \
-            xxd \
-            musl-tools \
-            time
+            openssl-dev \
+            openssl-libs-static \
+            vim \
+            curl
 
       - name: Generate build system
         run: autoreconf -i
 
       - name: Configure static build
-        run: ./configure CC=musl-gcc --enable-static-build
+        run: ./configure LDFLAGS="-static"
 
       - name: Build
         run: make
 
+      - name: Verify static binary
+        run: |
+          file src/build-recorder
+          ldd src/build-recorder 2>&1 | grep -q "not a dynamic executable" || ldd src/build-recorder 2>&1 | grep -q "statically linked"
+
       - name: Rename binary
-        run: mv build-recorder build-recorder-linux-x86_64-static
+        run: mv src/build-recorder build-recorder-linux-x86_64-static
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
