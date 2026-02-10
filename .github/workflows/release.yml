@@ -103,11 +103,14 @@ jobs:
       - name: Build DEB package
         run: dpkg-buildpackage -us -uc -b
 
+      - name: Copy DEB to workspace
+        run: cp ../*.deb .
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: deb-package
-          path: ../*.deb
+          path: "*.deb"
 
   build-rpm:
     runs-on: ubuntu-latest

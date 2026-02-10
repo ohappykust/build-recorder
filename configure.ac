@@ -48,7 +48,7 @@ AC_CHECK_HEADER([errno.h],, AC_MSG_ERROR([cannot find errno.h]))
 AC_CHECK_HEADER([error.h], [AC_DEFINE([HAVE_ERROR_H], [1], [Define if error.h is available])])
 AC_CHECK_HEADER([fcntl.h],, AC_MSG_ERROR([cannot find fcntl.h]))
 AC_CHECK_HEADER([limits.h],, AC_MSG_ERROR([cannot find limits.h]))
-AC_CHECK_HEADER([linux/limits.h],, AC_MSG_ERROR([cannot find linux/limits.h]))
+AC_CHECK_HEADER([linux/limits.h], [AC_DEFINE([HAVE_LINUX_LIMITS_H], [1], [Define if linux/limits.h is available])])
 AC_CHECK_HEADER([linux/ptrace.h],, AC_MSG_ERROR([cannot find linux/ptrace.h]))
 AC_CHECK_HEADER([openssl/evp.h],, AC_MSG_ERROR([cannot find openssl/evp.h]))
 AC_CHECK_HEADER([stdbool.h],, AC_MSG_ERROR([cannot find stdbool.h]))
@@ -80,7 +80,13 @@ AC_CHECK_TYPE([time_t],, AC_MSG_ERROR([cannot find time_t]), [#include <time.h>]
 AC_CHECK_TYPE([uint8_t],, AC_MSG_ERROR([cannot find uint8_t]), [#include <stdint.h>])
 
 
-AC_CHECK_DECL([ARG_MAX],, AC_MSG_ERROR([cannot find ARG_MAX]), [#include <linux/limits.h>])
+AC_CHECK_DECL([ARG_MAX],, AC_MSG_ERROR([cannot find ARG_MAX]), [
+#ifdef HAVE_LINUX_LIMITS_H
+#include <linux/limits.h>
+#else
+#include <limits.h>
+#endif
+])
 AC_CHECK_DECL([AT_FDCWD],, AC_MSG_ERROR([cannot find AT_FDCWD]), [#include <fcntl.h>])
 AC_CHECK_DECL([ENOENT],, AC_MSG_ERROR([cannot find ENOENT]), [#include <errno.h>])
 AC_CHECK_DECL([EXIT_FAILURE],, AC_MSG_ERROR([cannot find EXIT_FAILURE]), [#include <stdlib.h>])

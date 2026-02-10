@@ -22,7 +22,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 #include	<sys/signal.h>
 #include	<sys/syscall.h>
 #include	<sys/wait.h>
-#include	<linux/limits.h>
+
 
 #include	"types.h"
 #include	"hash.h"

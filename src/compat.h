@@ -9,6 +9,16 @@
 
 #include "config.h"
 
+/* Handle ARG_MAX - use linux/limits.h if available, otherwise limits.h */
+#ifdef HAVE_LINUX_LIMITS_H
+#include <linux/limits.h>
+#else
+#include <limits.h>
+#ifndef ARG_MAX
+#define ARG_MAX 131072
+#endif
+#endif
+
 #ifdef HAVE_ERROR_H
 #include <error.h>
 #else
