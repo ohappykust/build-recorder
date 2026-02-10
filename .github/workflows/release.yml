@@ -6,9 +6,8 @@ on:
       - 'v*'
 
 jobs:
-  build-static:
+  build-ubuntu:
     runs-on: ubuntu-latest
-    container: alpine:latest
 
     steps:
       - name: Checkout repository
@@ -16,37 +15,30 @@ jobs:
 
       - name: Install dependencies
         run: |
-          apk add --no-cache \
-            build-base \
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
             autoconf \
             automake \
-            openssl-dev \
-            openssl-libs-static \
-            linux-headers \
-            vim \
-            curl
+            libssl-dev
 
       - name: Generate build system
         run: autoreconf -i
 
-      - name: Configure static build
-        run: ./configure LDFLAGS="-static"
+      - name: Configure
+        run: ./configure
 
       - name: Build
         run: make -j$(nproc)
 
-      - name: Verify static binary
-        run: |
-          file build-recorder | grep -q "static"
-
       - name: Rename binary
-        run: mv build-recorder build-recorder-linux-x86_64-static
+        run: mv build-recorder build-recorder-linux-x86_64-ubuntu
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: static-binary
-          path: build-recorder-linux-x86_64-static
+          name: ubuntu-binary
+          path: build-recorder-linux-x86_64-ubuntu
 
   build-tarball:
     runs-on: ubuntu-latest
@@ -234,16 +226,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release:
-    needs: [build-static, build-tarball, build-deb, build-rpm, generate-changelog]
+    needs: [build-ubuntu, build-tarball, build-deb, build-rpm, generate-changelog]
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - name: Download static binary
+      - name: Download Ubuntu binary
         uses: actions/download-artifact@v4
         with:
-          name: static-binary
+          name: ubuntu-binary
           path: artifacts
 
       - name: Download source tarball

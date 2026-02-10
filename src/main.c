@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 
 #include "config.h"
 
-#include "compat.h"
+#include <error.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

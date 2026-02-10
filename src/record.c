@@ -17,7 +17,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 #include	<sys/types.h>
 #include	<sys/stat.h>
 #include	<fcntl.h>
-#include "compat.h"
+#include	<error.h>
 #include	<errno.h>
 
 FILE *fout;

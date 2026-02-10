@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 #include "config.h"
 
 #include <errno.h>		       // errno(3)
-#include "compat.h"		       // error(3)
+#include <error.h>		       // error(3)
 #include <fcntl.h>		       // open(2)
 #include <limits.h>		       // PATH_MAX
 #include <stdint.h>		       // uint8_t

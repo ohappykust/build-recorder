@@ -8,13 +8,14 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 #include	"config.h"
 
 #include	<errno.h>
-#include "compat.h"
+#include	<error.h>
 #include	<stdlib.h>
 #include	<stdio.h>
 #include	<stddef.h>
 #include	<string.h>
 #include	<unistd.h>
 #include	<fcntl.h>
+#include	<limits.h>
 
 #include	<sys/ptrace.h>
 #include	<linux/ptrace.h>
