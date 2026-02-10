@@ -611,6 +611,10 @@ tracer_main(pid_t pid, PROCESS_INFO *pi, char *path, char **envp)
 	pid = wait(&status);
 
 	if (pid < 0) {
+	    if (errno == ECHILD) {
+		// No more child processes - exit gracefully
+		break;
+	    }
 	    error(EXIT_FAILURE, errno, "wait failed");
 	}
 
