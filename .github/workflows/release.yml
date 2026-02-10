@@ -22,6 +22,7 @@ jobs:
             automake \
             openssl-dev \
             openssl-libs-static \
+            linux-headers \
             vim \
             curl
 
