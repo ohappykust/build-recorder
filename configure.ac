@@ -45,7 +45,7 @@ AC_CHECK_LIB(crypto, EVP_sha1,, AC_MSG_ERROR([cannot find libcrypto]))
 
 dnl Checks for headers
 AC_CHECK_HEADER([errno.h],, AC_MSG_ERROR([cannot find errno.h]))
-AC_CHECK_HEADER([error.h],, AC_MSG_ERROR([cannot find error.h]))
+AC_CHECK_HEADER([error.h], [AC_DEFINE([HAVE_ERROR_H], [1], [Define if error.h is available])])
 AC_CHECK_HEADER([fcntl.h],, AC_MSG_ERROR([cannot find fcntl.h]))
 AC_CHECK_HEADER([limits.h],, AC_MSG_ERROR([cannot find limits.h]))
 AC_CHECK_HEADER([linux/limits.h],, AC_MSG_ERROR([cannot find linux/limits.h]))

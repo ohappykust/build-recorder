@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 
 #include <stdlib.h>
 #include <errno.h>
-#include <error.h>
+#include "compat.h"
 
 #include "pid_hash.h"
 

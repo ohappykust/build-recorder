@@ -97,3 +97,9 @@ build-aux/compile
 build-aux/depcomp
 build-aux/install-sh
 build-aux/missing
+
+# Build output
+*.out
+configure~
+src/config.h.in
+src/stamp-h1
