@@ -17,7 +17,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 #include	<sys/types.h>
 #include	<sys/stat.h>
 #include	<fcntl.h>
-#include	<error.h>
+#include "compat.h"
 #include	<errno.h>
 
 FILE *fout;
@@ -33,6 +33,15 @@ record_start(char *fname)
     fwrite(schema, sizeof (char), schema_len, fout);
 
     fprintf(fout, "\n\n");
+}
+
+void
+record_end(void)
+{
+    if (fout != NULL) {
+	fclose(fout);
+	fout = NULL;
+    }
 }
 
 static void
@@ -100,25 +109,30 @@ get_cmdline(pid_t pid)
 	error(EXIT_FAILURE, errno, "on get_cmdline malloc");
     }
 
-    *ret = '\0';
+    char *dest = ret;
+    has_spaces = false;
 
     for (i = 0, w = c = data; i < n; i++, c++) {
 	if (*c == ' ') {
 	    has_spaces = true;
 	} else if (*c == '\0') {
+	    size_t len = c - w;
 	    if (has_spaces) {
-		strcat(ret, "'");
-		strcat(ret, w);
-		strcat(ret, "'");
+		*dest++ = '\'';
+		memcpy(dest, w, len);
+		dest += len;
+		*dest++ = '\'';
 	    } else {
-		strcat(ret, w);
+		memcpy(dest, w, len);
+		dest += len;
 	    }
 	    if (i < n - 1)
-		strcat(ret, " ");
+		*dest++ = ' ';
 	    w = c + 1;
 	    has_spaces = false;
 	}
     }
+    *dest = '\0';
 
     return ret;
 }
